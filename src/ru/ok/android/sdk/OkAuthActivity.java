@@ -27,6 +27,8 @@ import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Random;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import org.apache.http.impl.client.DefaultHttpClient;
 
 import ru.ok.android.sdk.util.OkNetUtil;
@@ -44,8 +46,8 @@ import android.os.Bundle;
 import android.text.TextUtils;
 
 public class OkAuthActivity extends Activity {
-	
-	private static final int SSO_ACTIVITY_REQUEST_CODE = 31337;
+
+    private static final int SSO_ACTIVITY_REQUEST_CODE = 31337;
 	
 	private static final String EXTRA_AUTH_STATE = "authstate";
 	
@@ -61,8 +63,13 @@ public class OkAuthActivity extends Activity {
 	private static final int STATE_SENT_SSO = 4;
 	// Activity is done with authorization and is finishing
 	private static final int STATE_FINISH = 5;
-	
-	private String mAppId;
+    public static final int WEB_AUTH_REQUEST_CODE = 1000;
+    public static final String OK_PREFS_TAG = "SHARED_OK";
+    public static final String APP_ID_KEY = "app_id";
+    public static final String APP_SECRET_KEY = "app_secret";
+    public static final String APP_KEY_KEY = "app_key";
+
+    private String mAppId;
 	private String mAppKey;
 	private String mAppSecret;
 	private String[] mScopes;
@@ -70,28 +77,38 @@ public class OkAuthActivity extends Activity {
 	private Random mRandom = new Random();
 	
 	private int mAuthState = STATE_INIT;
-	
-	@Override
+
+    @Override
 	protected void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		if (savedInstanceState != null) {
+        getFromPrefs();
+        if (savedInstanceState != null) {
 			mAuthState = savedInstanceState.getInt(EXTRA_AUTH_STATE);
 			mAppId = savedInstanceState.getString(PARAM_CLIENT_ID);
 			mAppSecret = savedInstanceState.getString(PARAM_CLIENT_SECRET);
 			mAppKey = savedInstanceState.getString(PARAM_APP_KEY);
 			mScopes = savedInstanceState.getStringArray(PARAM_SCOPES);
 		}
-		doActionOnIntent(getIntent());
+        doActionOnIntent(getIntent());
+
 	}
 	
 	@Override
 	protected void onNewIntent(final Intent intent) {
 		// New intent received. Most likely a response from a browser auth
 		super.onNewIntent(intent);
+
 		doActionOnIntent(intent);
 	}
-	
-	@Override
+
+    private void getFromPrefs() {
+        SharedPreferences prefs = getSharedPreferences(OK_PREFS_TAG, Context.MODE_PRIVATE);
+        mAppId = prefs.getString(APP_ID_KEY, "");
+        mAppKey = prefs.getString(APP_KEY_KEY, "");
+        mAppSecret = prefs.getString(APP_SECRET_KEY, "");
+    }
+
+    @Override
 	protected void onSaveInstanceState(final Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putInt(EXTRA_AUTH_STATE, mAuthState);
@@ -99,12 +116,13 @@ public class OkAuthActivity extends Activity {
 		outState.putString(Shared.PARAM_APP_KEY, mAppKey);
 		outState.putString(Shared.PARAM_CLIENT_SECRET, mAppSecret);
 		outState.putStringArray(Shared.PARAM_SCOPES, mScopes);
+        outState.putBoolean("isRestoring", true);
 	}
 	
 	private final void doActionOnIntent(final Intent intent) {
 		final int method = intent.getIntExtra(PARAM_METHOD, 0);
 		intent.removeExtra(PARAM_METHOD);
-		if (method == METHOD_AUTHORIZE) {
+		if (method == METHOD_AUTHORIZE ) {
 			// Authorization requested
 			onAuthAction(intent);
 		} else {
@@ -121,6 +139,7 @@ public class OkAuthActivity extends Activity {
 					}
 				} else {
 					// User pressed "login" in browser, but authorization process was already finished before, so do nothing
+
 					finish();
 					overridePendingTransition(0, 0);
 				}
@@ -136,6 +155,11 @@ public class OkAuthActivity extends Activity {
 			mAppSecret = extras.getString(PARAM_CLIENT_SECRET);
 			mAppKey = extras.getString(PARAM_APP_KEY);
 			mScopes = extras.getStringArray(PARAM_SCOPES);
+            SharedPreferences.Editor editor = getSharedPreferences(OK_PREFS_TAG, Context.MODE_PRIVATE).edit();
+            editor.putString(APP_ID_KEY, mAppId);
+            editor.putString(APP_SECRET_KEY, mAppSecret);
+            editor.putString(APP_KEY_KEY, mAppKey);
+            editor.commit();
 			if (hasAppInfo()) {
 				failed = false;
 				boolean oauth = extras.getBoolean(PARAM_OAUTH_ONLY);
@@ -207,6 +231,7 @@ public class OkAuthActivity extends Activity {
 		intent.setAction(Intent.ACTION_VIEW);
 		intent.setData(Uri.parse(oauthUrl));
 		startActivity(intent);
+        finish();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -293,7 +318,9 @@ public class OkAuthActivity extends Activity {
 		bundle.putString(PARAM_REFRESH_TOKEN, refreshToken);
 		sendBundle(bundle);
 		mAuthState = STATE_FINISH;
-		onBackPressed();
+        finish();
+//        onBackPressed();
+
 	}
 	
 	private final void sendBundle(final Bundle bundle) {
