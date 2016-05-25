@@ -150,12 +150,16 @@ public class Odnoklassniki {
             } else {
                 final String sessionSecretKey = result.getString(Shared.PARAM_SESSION_SECRET_KEY);
                 final String refreshToken = result.getString(Shared.PARAM_REFRESH_TOKEN);
+                long expiresIn = result.getLong(Shared.PARAM_EXPIRES_IN);
                 mAccessToken = accessToken;
                 mSessionSecretKey = sessionSecretKey != null ? sessionSecretKey : refreshToken;
                 JSONObject json = new JSONObject();
                 try {
                     json.put(Shared.PARAM_ACCESS_TOKEN, mAccessToken);
                     json.put(Shared.PARAM_SESSION_SECRET_KEY, mSessionSecretKey);
+                    if (expiresIn > 0) {
+                        json.put(Shared.PARAM_EXPIRES_IN, expiresIn);
+                    }
                 } catch (JSONException ignore) {
                 }
                 notifySuccess(json);
@@ -195,7 +199,7 @@ public class Odnoklassniki {
 
     /**
      * Call an API method and get the result as a String.
-     * <p>
+     * <p/>
      * <b>Note that those calls MUST be performed in a non-UI thread.</b>
      *
      * @param apiMethod  - odnoklassniki api method.
@@ -211,7 +215,7 @@ public class Odnoklassniki {
 
     /**
      * Call an API method and get the result as a String.
-     * <p>
+     * <p/>
      * <b>Note that those calls MUST be performed in a non-UI thread.</b>
      *
      * @param apiMethod  - odnoklassniki api method.
@@ -233,6 +237,7 @@ public class Odnoklassniki {
         }
         requestParams.put(Shared.PARAM_APP_KEY, mAppKey);
         requestParams.put(Shared.PARAM_METHOD, apiMethod);
+        requestParams.put(Shared.PARAM_PLATFORM, Shared.APP_PLATFORM);
         signParameters(requestParams);
         requestParams.put(Shared.PARAM_ACCESS_TOKEN, mAccessToken);
         final String requestUrl = Shared.API_URL;
@@ -250,9 +255,9 @@ public class Odnoklassniki {
      * <br/>
      * Note that a method is synchronous so should not be called from UI thread<br/>
      *
-     * @param method REST method
-     * @param params request params
-     * @param mode   request mode
+     * @param method    REST method
+     * @param params    request params
+     * @param mode      request mode
      * @return query result
      * @throws IOException
      * @see OkRequestMode#DEFAULT OkRequestMode.DEFAULT default request mode
@@ -274,6 +279,7 @@ public class Odnoklassniki {
         }
         requestParams.put(Shared.PARAM_APP_KEY, mAppKey);
         requestParams.put(Shared.PARAM_METHOD, method);
+        requestParams.put(Shared.PARAM_PLATFORM, Shared.APP_PLATFORM);
         if (mode.contains(OkRequestMode.SIGNED)) {
             signParameters(requestParams);
             requestParams.put(Shared.PARAM_ACCESS_TOKEN, mAccessToken);
@@ -290,7 +296,7 @@ public class Odnoklassniki {
 
     /**
      * Call an API method and get the result as a String.
-     * <p>
+     * <p/>
      * Note, that those calls <b>MUST be performed in a non-UI thread</b>.<br/>
      * Note, that if an api method does not return JSONObject but might return array or just a value,
      * this method should not be used. Thus it is preferable to use #request(String, Map, EnumSet) instead
@@ -319,10 +325,10 @@ public class Odnoklassniki {
 
     /**
      * Convenience method to send invitation to the application to friends.
-     * <p>
+     * <p/>
      * <b>Important: User must confirm the list of recipients. It must be obvious for user, that his action will result sending the pack of invitations to other users. Violating this rule will cause the application to be blocked by administration. In
      * case of any questions or doubts please contact API support team.</b>
-     * <p>
+     * <p/>
      * <b>Note: Use method friends.getByDevices to get user's friends having devices you are interested in.</b>
      *
      * @param friendUids     - list of recipient friend ids (required).
@@ -396,7 +402,7 @@ public class Odnoklassniki {
      *
      * @param attachment      - json with publishing attachment
      * @param userTextEnabled - ability to enable user comment
-     * @param args            widget arguments as specified in documentation
+     * @param args     widget arguments as specified in documentation
      * @param postingListener - listener which will be called after method call
      */
     public void performPosting(String attachment, boolean userTextEnabled,
