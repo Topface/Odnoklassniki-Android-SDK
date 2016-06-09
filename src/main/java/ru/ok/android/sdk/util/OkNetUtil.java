@@ -83,15 +83,20 @@ public class OkNetUtil {
 
     private static final String executeHttpRequest(final HttpClient httpClient, final HttpRequestBase httpRequest)
             throws IOException {
-        final HttpResponse httpResponse = httpClient.execute(httpRequest);
-        final HttpEntity httpEntity = httpResponse.getEntity();
-        if (httpEntity != null) {
-            try {
-                return OkIOUtil.inputStreamToString(httpEntity.getContent());
-            } catch (Exception exc) {
+        try {
+            final HttpResponse httpResponse = httpClient.execute(httpRequest);
+
+            final HttpEntity httpEntity = httpResponse.getEntity();
+            if (httpEntity != null) {
+                try {
+                    return OkIOUtil.inputStreamToString(httpEntity.getContent());
+                } catch (Exception exc) {
+                }
+            } else {
+                throw new IOException();
             }
-        } else {
-            throw new IOException();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
         }
         return null;
     }
