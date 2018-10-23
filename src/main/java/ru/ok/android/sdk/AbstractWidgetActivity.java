@@ -8,10 +8,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.net.http.SslError;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.KeyEvent;
 import android.webkit.SslErrorHandler;
 import android.webkit.WebView;
+
+import androidx.annotation.Nullable;
 import ru.ok.android.sdk.util.OkEncryptUtil;
 import ru.ok.android.sdk.util.OkNetUtil;
 

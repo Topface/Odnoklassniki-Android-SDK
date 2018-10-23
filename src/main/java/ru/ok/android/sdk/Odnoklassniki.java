@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.webkit.CookieManager;
 import android.webkit.CookieSyncManager;
@@ -30,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
+import androidx.annotation.Nullable;
 import ru.ok.android.sdk.util.OkAuthType;
 import ru.ok.android.sdk.util.OkEncryptUtil;
 import ru.ok.android.sdk.util.OkNetUtil;
